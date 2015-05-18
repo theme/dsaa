@@ -196,7 +196,50 @@ Poly polyAdd( Poly A, Poly B){
         }
         return sum;
 }
-Poly polyMultiply( Poly A, Poly B){
+
+int
+polyLen( Poly P){
+        int len = 0;
+        while ( NULL != P )
+        {
+                len ++;
+                P = P->next;
+        }
+        return len;
+}
+
+Poly
+polyMultiply2( Poly A, Poly B){
+        Poly l = newPoly();
+        if (NULL == l)
+                return l;
+
+        Position a = first( A );
+        while ( NULL != a)
+        {
+                Position b = first( B );
+                Position pl = l; 
+
+                while (NULL != b)
+                {
+                        int exp = a->exp * b->exp;
+                        while ( NULL != pl->next && pl->next->exp > exp)        //start position for this round of insertion
+                                pl  = pl->next;
+
+                        if ( NULL != pl->next && pl->next->exp == exp)
+                                pl->next->coeff += a->coeff * b->coeff;
+                        else
+                                insertAfter( a->coeff * b->coeff, exp, l, pl);
+
+                        b = b->next;
+                }
+                a = a->next;
+        }
+        return l;
+}
+
+Poly
+polyMultiply( Poly A, Poly B){
         Poly l = newPoly();
         if (NULL == l)
                 return l;
@@ -213,6 +256,29 @@ Poly polyMultiply( Poly A, Poly B){
                 a = a->next;
         }
         return l;
+}
+
+Poly
+polyOne(){
+        Poly one = newPoly();
+        addItem( 1, 0, one );
+        return one;
+}
+
+/* calculate exponent of polynomial */
+Poly
+polyExp( Poly p, int e ){
+        if ( 0 == e)
+                return polyOne();
+        if ( 1 == e )
+                return p;
+        if ( 0 == e % 2) //todo isEven()
+        {
+                return polyExp( polyMultiply( p, p) , e/2 );
+        }else
+        {
+                return polyMultiply( polyExp( polyMultiply( p, p) , e/2 ), p );
+        }
 }
 
 int main(int argc, char const *argv[]){
@@ -240,7 +306,8 @@ int main(int argc, char const *argv[]){
 
         printPoly( li );
         printPoly( lp );
-        mulp = polyMultiply( li, lp);
+
+        mulp = polyMultiply2( li, lp);
         printf("\nmultiply : " );
         printPoly( mulp );
         deletePoly( mulp);
@@ -249,6 +316,9 @@ int main(int argc, char const *argv[]){
         printf("\nadd : " );
         printPoly( sump );
         deletePoly( sump );
+
+        printf("\n li ^2: ");
+        printPoly( polyExp(li,2) );
 
         //swapNext( first(li), li );
         deletePoly( li );
